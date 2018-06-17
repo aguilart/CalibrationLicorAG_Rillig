@@ -16,4 +16,8 @@ The update should contain:
 2. The fitting values of the calibration (that is, the slope and the intercept of the fitted line of observed peaks~known CO2 values)
 3. A plot to check visualize the fitted line
 
+In this way we can paste those values here. As follows
+
+Calibration conversion factor for 5ml = ((your sample value)*38.25) - 265.57
+
 Thanks!!
