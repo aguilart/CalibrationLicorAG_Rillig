@@ -4,6 +4,8 @@
 
 #Note! Licor measures CO2 as concentration in umol/mol which is the same as ppm!
 
+#First Calibration
+
 # To calibrate CO2 injected in the Licor, one needs to inject in the Licor a volume of
 #air with a known concentration of CO2. Max and Carlos (on mid August 2017) did this calibration.
 #They use the Licor machine itself to produce and collect certain concentration of CO2 
@@ -20,6 +22,9 @@ KnownCO2<-c(43.3,45.3,66.0,88.8,115.9,195.8,316.6,528.4,1056.1,2199.8)
 
 AugustCalibrationData<-read.csv("calibration mixer off 15.8.17_.csv",header = F,stringsAsFactors = F)
                         AugustCalibrationData<-Convertir(AugustCalibrationData)
+                        #"Covertir" is function to convert the long format produced by the LiCor
+                        #into a more friendly format. Look at "FileConversionFunction" to take 
+                        #look on what the function does (Carlos made the function)
                         AugustCalibrationData<-AugustCalibrationData[[2]]
 
                       ##NOTES on the data recorded
@@ -55,6 +60,9 @@ AugustCalPeaks<-data.frame(
                 AugustCalPeaks$Peaks<-as.numeric(AugustCalPeaks$Peaks)
                 rownames(AugustCalPeaks)<-NULL
   
+                prueba<-
+                getPeaks(AugustCalibrationData)
+                
 #Now this peaks are plotted against the known concentration where they come from; and then one 
 #calculates the regression line to obtain a conversion factor from peak to real concentration
 
@@ -64,7 +72,7 @@ AugustCalPeaks<-data.frame(
                   ggplot()+
                     aes(x=rev(AugustCalPeaks$Peaks),y=KnownCO2)+
                     geom_point()+
-                    labs(x="Observed Peak Concentration for 5ml (ppm)",
+                    labs(x="Observed Peak Concentration for 5ml samples (ppm)",
                          y="Known sample concentration (ppm)")+
                     geom_smooth(method=lm,se=F)+
                     ggtitle(label = "Max & Carlos calibration August 2017")
@@ -79,7 +87,7 @@ AugustCalPeaks<-data.frame(
           
           Conversion5ml<-function(x){x<-(38.25*x)-265}
   
-#NOTES THIS CONVERSION
+#NOTES ON THIS CONVERSION
           
 #Althought line fits really nicely the data. It seems that for samples of 5ml containing
 #concentration below 60, the fitted values are not that accurate. It seems like that this why
@@ -89,3 +97,46 @@ AugustCalPeaks<-data.frame(
           Comparison<-data.frame(
             ObservedPeaks=rev(AugustCalPeaks$Peaks),KnownCO2,
             FittedValues=(rev(AugustCalPeaks$Peaks)*38.25)-265)
+#############################################################################################         
+
+#For future calibrations:
+          
+#1.Get samples of known concentrations at the desired given volume:
+          
+          KnownCO2_x_ml<-c()
+          
+#2. Load the file with the injected CO2 of known concentration (Inject the samples in the same
+          #order you recorded the value in knownCO2_x_ml :
+          NewCalibration<-read.csv("x",header = F,stringsAsFactors = F)
+
+#3. Transform the file to the desired format using Covertir function (run first "FileConversionFunction.R)
+
+          NewCalibration<-Convertir(NewCalibration)
+          #Then select only data
+          NewCalibration<-NewCalibration[[2]]
+          
+#4. Get the peaks per sample injected
+      #Note: you can use the created function "getPeaks" (first remember to run first
+      #"FileConversionFunction.R). This function works if the CO2 value were recorded in the
+      #"CO2R" column (not in CO2S)
+          
+          NewPeaks<-getPeaks(NewCalibration)
+          
+#5. Plotting the relationship
+          library(tidyverse)
+          
+          ggplot()+
+            aes(x=NewPeaks$Peaks,y=KnownCO2_x_ml)+
+            geom_point()+
+            labs(x="Observed Peak Concentration for X ml samples (ppm)",
+                 y="Known sample concentration (ppm)")+
+            geom_smooth(method=lm,se=F)+
+            ggtitle(label = "Name-calibration-Date")
+          
+#6. Fitting a line
+          summary.lm(lm(KnownCO2~NewPeaks$Peaks))
+          
+#7. That´s it! Now write down the slope and intercept of the relationship!
+          
+##REMEMBER TO CHECK THAT THE ORDER OF THE KNOWN CO2 VALUES MATCHES THE ORDER AT WHICH THE
+##SAMPLES WERE INJECTED
