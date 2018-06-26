@@ -39,7 +39,8 @@ getPeaks<-function(x){
               x$Sample<-rownames(x)
               names(x)[1]<-c("Peaks")
               x$Peaks<-as.numeric(x$Peaks)
-              x<-x[c(1,3:10,2),]
+              x$Sample<-as.numeric(sub("T_","",x$Sample))
+              x<-x[order(x$Sample),]
               rownames(x)<-NULL
               x
             }
